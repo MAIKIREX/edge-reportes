@@ -16,10 +16,10 @@ import { toast } from 'sonner';
 import type { CityConfig } from '@/types/results.types';
 
 export function ConfigPanel() {
-  const { 
-    periodConfig, setPeriodConfig, 
+  const {
+    periodConfig, setPeriodConfig,
     cityConfigs, setCityConfigs, addCityConfig, updateCityConfig, removeCityConfig,
-    exportConfigJson, importConfig
+    exportConfigJson, importConfig,
   } = useResultsStore();
 
   const [newCityName, setNewCityName] = useState('');
@@ -27,23 +27,25 @@ export function ConfigPanel() {
 
   const handleAddCity = () => {
     if (!newCityName.trim()) return;
-    
+
+    const normalizedCity = newCityName.toUpperCase();
     const newCity: CityConfig = {
       cityId: newCityName.toLowerCase().replace(/\s+/g, '_'),
-      cityLabel: newCityName.toUpperCase(),
-      aliases: [newCityName.toUpperCase()],
+      cityLabel: normalizedCity,
+      aliases: [normalizedCity],
       mo: 0,
       activo: true,
       area: '',
+      simplifiedCity: normalizedCity,
       promGestor: 4,
       gestoresAyer: 0,
       errorRealPct: 0,
       diasFaltantes: 0,
       descansos: 0,
       diasOffsetCierre: 2,
-      umbralAcabado: 5
+      umbralAcabado: 5,
     };
-    
+
     addCityConfig(newCity);
     setNewCityName('');
   };
@@ -52,7 +54,7 @@ export function ConfigPanel() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = ev => {
       const content = ev.target?.result as string;
       importConfig(content);
     };
@@ -66,7 +68,7 @@ export function ConfigPanel() {
 
     const lowerName = file.name.toLowerCase();
     if (!lowerName.endsWith('.xlsx') && !lowerName.endsWith('.xls')) {
-      toast.error('Formato inválido. Sube un archivo .xlsx o .xls');
+      toast.error('Formato invalido. Sube un archivo .xlsx o .xls');
       return;
     }
 
@@ -74,21 +76,20 @@ export function ConfigPanel() {
     try {
       const result = await parseCityConfigExcel(file);
       if (result.cityConfigs.length === 0) {
-        toast.warning('Archivo válido, pero no contiene filas útiles para importar.');
+        toast.warning('Archivo valido, pero no contiene filas utiles para importar.');
         return;
       }
 
-      // UX simple: reemplaza toda la tabla actual con la importación.
       setCityConfigs(result.cityConfigs);
 
       const details: string[] = [];
       if (result.duplicateRows > 0) details.push(`${result.duplicateRows} duplicadas ignoradas`);
-      if (result.skippedInvalidRows > 0) details.push(`${result.skippedInvalidRows} inválidas omitidas`);
-      if (result.skippedEmptyRows > 0) details.push(`${result.skippedEmptyRows} vacías omitidas`);
+      if (result.skippedInvalidRows > 0) details.push(`${result.skippedInvalidRows} invalidas omitidas`);
+      if (result.skippedEmptyRows > 0) details.push(`${result.skippedEmptyRows} vacias omitidas`);
 
       toast.success(
         `Archivo cargado correctamente. Se importaron ${result.cityConfigs.length} ciudades.`,
-        { description: details.length ? details.join(' · ') : undefined }
+        { description: details.length ? details.join(' | ') : undefined }
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error al importar el Excel de ciudades';
@@ -123,36 +124,36 @@ export function ConfigPanel() {
       <TabsContent value="periodo">
         <Card>
           <CardHeader>
-            <CardTitle>Configuración del Periodo</CardTitle>
-            <CardDescription>Define las fechas y reglas de calendario para los cálculos de hoy.</CardDescription>
+            <CardTitle>Configuracion del Periodo</CardTitle>
+            <CardDescription>Define las fechas y reglas de calendario para los calculos de hoy.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="startDate">Fecha Inicio</Label>
-                <Input 
-                  id="startDate" 
-                  type="date" 
-                  value={periodConfig.startDate} 
-                  onChange={(e) => setPeriodConfig({ ...periodConfig, startDate: e.target.value })}
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={periodConfig.startDate}
+                  onChange={e => setPeriodConfig({ ...periodConfig, startDate: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="endDate">Fecha Fin</Label>
-                <Input 
-                  id="endDate" 
-                  type="date" 
-                  value={periodConfig.endDate} 
-                  onChange={(e) => setPeriodConfig({ ...periodConfig, endDate: e.target.value })}
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={periodConfig.endDate}
+                  onChange={e => setPeriodConfig({ ...periodConfig, endDate: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="todayCutoff">Fecha de Corte (Hoy)</Label>
-                <Input 
-                  id="todayCutoff" 
-                  type="date" 
-                  value={periodConfig.todayCutoff} 
-                  onChange={(e) => setPeriodConfig({ ...periodConfig, todayCutoff: e.target.value })}
+                <Input
+                  id="todayCutoff"
+                  type="date"
+                  value={periodConfig.todayCutoff}
+                  onChange={e => setPeriodConfig({ ...periodConfig, todayCutoff: e.target.value })}
                 />
               </div>
             </div>
@@ -162,9 +163,9 @@ export function ConfigPanel() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label>Regla de Domingos</Label>
-                <Select 
-                  value={periodConfig.excludeSundays ? 'exclude' : 'include'} 
-                  onValueChange={(val) => setPeriodConfig({ ...periodConfig, excludeSundays: val === 'exclude' })}
+                <Select
+                  value={periodConfig.excludeSundays ? 'exclude' : 'include'}
+                  onValueChange={val => setPeriodConfig({ ...periodConfig, excludeSundays: val === 'exclude' })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -176,18 +177,18 @@ export function ConfigPanel() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Factor Sábados</Label>
-                <Select 
-                  value={String(periodConfig.saturdayFactor)} 
-                  onValueChange={(val) => setPeriodConfig({ ...periodConfig, saturdayFactor: parseFloat(val) })}
+                <Label>Factor Sabados</Label>
+                <Select
+                  value={String(periodConfig.saturdayFactor)}
+                  onValueChange={val => setPeriodConfig({ ...periodConfig, saturdayFactor: parseFloat(val) })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">Sábados cuentan como 1 día</SelectItem>
-                    <SelectItem value="0.5">Sábados cuentan como 0.5 día</SelectItem>
-                    <SelectItem value="0">Sábados no cuentan</SelectItem>
+                    <SelectItem value="1">Sabados cuentan como 1 dia</SelectItem>
+                    <SelectItem value="0.5">Sabados cuentan como 0.5 dia</SelectItem>
+                    <SelectItem value="0">Sabados no cuentan</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -210,8 +211,10 @@ export function ConfigPanel() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
-              <CardTitle>Configuración por Ciudad</CardTitle>
-              <CardDescription>Carga configuración inicial desde Excel (Area, City name, MO) y completa Descansos manualmente.</CardDescription>
+              <CardTitle>Configuracion por Ciudad</CardTitle>
+              <CardDescription>
+                Importa el Excel base con columnas exactas: Metropolitan Area, City Name, MO y CIUDADES SIMPLIFICADO.
+              </CardDescription>
             </div>
             <div className="flex gap-2">
               <Button
@@ -230,12 +233,12 @@ export function ConfigPanel() {
                   onChange={handleCityExcelImport}
                 />
               </Button>
-              <Input 
-                placeholder="Nombre de ciudad..." 
+              <Input
+                placeholder="Nombre de ciudad..."
                 className="w-48"
                 value={newCityName}
-                onChange={(e) => setNewCityName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddCity()}
+                onChange={e => setNewCityName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddCity()}
               />
               <Button size="icon" onClick={handleAddCity}>
                 <Plus className="h-4 w-4" />
@@ -247,9 +250,11 @@ export function ConfigPanel() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Ciudad / Alias</TableHead>
-                    <TableHead className="w-24">Área</TableHead>
-                    <TableHead className="w-24 text-right">MO</TableHead>
+                    <TableHead>Metropolitan Area</TableHead>
+                    <TableHead>City Name</TableHead>
+                    <TableHead>MO</TableHead>
+                    <TableHead>CIUDADES SIMPLIFICADO</TableHead>
+                    <TableHead>Aliases</TableHead>
                     <TableHead className="w-24 text-right">Descansos</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
@@ -257,51 +262,62 @@ export function ConfigPanel() {
                 <TableBody>
                   {cityConfigs.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground italic">
-                        No hay ciudades configuradas. Agrega una arriba.
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground italic">
+                        No hay ciudades configuradas. Importa el Excel o agrega una arriba.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    cityConfigs.map((city) => (
+                    cityConfigs.map(city => (
                       <TableRow key={city.cityId}>
                         <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium text-sm">{city.cityLabel}</p>
-                            <Input 
-                              className="h-7 text-xs" 
-                              value={city.aliases.join(', ')} 
-                              onChange={(e) => updateCityConfig(city.cityId, { aliases: e.target.value.split(',').map(a => a.trim()).filter(Boolean) })}
-                              placeholder="Alias separados por coma"
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Input 
-                            className="h-8" 
-                            value={city.area} 
-                            onChange={(e) => updateCityConfig(city.cityId, { area: e.target.value })}
+                          <Input
+                            className="h-8"
+                            value={city.area}
+                            onChange={e => updateCityConfig(city.cityId, { area: e.target.value })}
                           />
                         </TableCell>
                         <TableCell>
-                          <Input 
-                            type="number" 
-                            className="h-8 text-right" 
-                            value={city.mo} 
-                            onChange={(e) => updateCityConfig(city.cityId, { mo: parseInt(e.target.value) || 0 })}
+                          <Input
+                            className="h-8"
+                            value={city.cityLabel}
+                            onChange={e => updateCityConfig(city.cityId, { cityLabel: e.target.value.toUpperCase() })}
                           />
                         </TableCell>
                         <TableCell>
-                          <Input 
-                            type="number" 
-                            className="h-8 text-right" 
+                          <Input
+                            type="number"
+                            className="h-8 text-right"
+                            value={city.mo}
+                            onChange={e => updateCityConfig(city.cityId, { mo: parseInt(e.target.value, 10) || 0 })}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="h-8"
+                            value={city.simplifiedCity ?? ''}
+                            onChange={e => updateCityConfig(city.cityId, { simplifiedCity: e.target.value.toUpperCase() })}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="h-8 text-xs"
+                            value={city.aliases.join(', ')}
+                            onChange={e => updateCityConfig(city.cityId, { aliases: e.target.value.split(',').map(alias => alias.trim()).filter(Boolean) })}
+                            placeholder="Alias separados por coma"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            className="h-8 text-right"
                             value={city.descansos ?? 0}
-                            onChange={(e) => updateCityConfig(city.cityId, { descansos: parseInt(e.target.value) || 0 })}
+                            onChange={e => updateCityConfig(city.cityId, { descansos: parseInt(e.target.value, 10) || 0 })}
                           />
                         </TableCell>
                         <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="text-muted-foreground hover:text-destructive h-8 w-8"
                             onClick={() => removeCityConfig(city.cityId)}
                           >
@@ -315,7 +331,7 @@ export function ConfigPanel() {
               </Table>
             </div>
             <p className="text-[10px] text-muted-foreground mt-4">
-              * Importación Excel: requiere columnas Area, City name y MO. Descansos se edita manualmente en esta tabla.
+              * La importacion respeta los nombres originales del Excel base y usa esas columnas para cargar la configuracion inicial de ciudades.
             </p>
           </CardContent>
         </Card>

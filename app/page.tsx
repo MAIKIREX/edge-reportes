@@ -1,32 +1,34 @@
 'use client';
 
-import { 
-  BarChart3, 
-  Settings2, 
-  UploadCloud, 
+import {
+  BarChart3,
+  Settings2,
+  UploadCloud,
   Table as TableIcon,
   HelpCircle,
   FileSpreadsheet,
-  Download,
-  Users
+  FileText,
+  Users,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfigPanel } from '@/features/resultados/components/config-panel';
 import { FileUploadPanel } from '@/features/resultados/components/file-upload-panel';
 import { GeneralTable } from '@/features/resultados/components/general-table';
 import { SpecificTable } from '@/features/resultados/components/specific-table';
+import { CombinedTable } from '@/features/resultados/components/combined-table';
 import { AttendanceTable } from '@/features/resultados/components/attendance-table';
+import { EdgeGeneralRequiredTable } from '@/features/resultados/components/edge-general-required-table';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useResultsStore } from '@/store/use-results-store';
+import { ModeToggle } from '@/components/mode-toggle';
 
 export default function ResultsDashboard() {
   const { rawFileRows, fileMetadata } = useResultsStore();
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-zinc-950/50">
-      {/* Header */}
       <header className="sticky top-0 z-30 w-full border-b bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md">
         <div className="container flex h-16 items-center justify-between px-4 mx-auto">
           <div className="flex items-center gap-2">
@@ -50,12 +52,12 @@ export default function ResultsDashboard() {
                 {fileMetadata?.filename}
               </Badge>
             )}
+            <ModeToggle />
             <HelpCircle className="h-5 w-5 text-zinc-400 cursor-help hover:text-blue-600 transition-colors" />
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container px-4 py-8 mx-auto">
         <Tabs defaultValue="carga" className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -71,7 +73,13 @@ export default function ResultsDashboard() {
                 <TableIcon className="h-4 w-4 text-blue-500" /> General
               </TabsTrigger>
               <TabsTrigger value="proyeccion" className="rounded-lg py-2 px-4 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-800">
-                <BarChart3 className="h-4 w-4 text-indigo-500" /> Proyección
+                <BarChart3 className="h-4 w-4 text-indigo-500" /> Proyeccion
+              </TabsTrigger>
+              <TabsTrigger value="combinados" className="rounded-lg py-2 px-4 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-800">
+                <FileText className="h-4 w-4 text-blue-500" /> Combinados
+              </TabsTrigger>
+              <TabsTrigger value="edge-general" className="rounded-lg py-2 px-4 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-800">
+                <TableIcon className="h-4 w-4 text-sky-500" /> EDGE general
               </TabsTrigger>
               <TabsTrigger value="asistencia" className="rounded-lg py-2 px-4 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-800">
                 <Users className="h-4 w-4 text-emerald-500" /> Asistencia
@@ -79,7 +87,7 @@ export default function ResultsDashboard() {
             </TabsList>
 
             <div className="flex items-center gap-2">
-               <p className="text-xs text-muted-foreground mr-2 italic">Corte: {new Date().toLocaleDateString('es-BO')}</p>
+              <p className="text-xs text-muted-foreground mr-2 italic">Corte: {new Date().toLocaleDateString('es-BO')}</p>
             </div>
           </div>
 
@@ -92,13 +100,13 @@ export default function ResultsDashboard() {
                 <Card className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none shadow-blue-200 dark:shadow-none">
                   <CardHeader>
                     <CardTitle className="text-white flex items-center gap-2">
-                       <HelpCircle className="h-5 w-5 opacity-80" /> Instrucciones
+                      <HelpCircle className="h-5 w-5 opacity-80" /> Instrucciones
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 text-sm text-blue-50">
-                    <p>1. Carga el archivo <strong>Desempeño de Usuarios por Día.xlsx</strong>.</p>
-                    <p>2. Verifica en la pestaña <strong>Config</strong> que los MO (metas) de cada ciudad sean correctos.</p>
-                    <p>3. Navega por las tablas de análisis para ver avances y proyecciones automáticas.</p>
+                    <p>1. Carga el archivo <strong>Desempeno de Usuarios por Dia.xlsx</strong>.</p>
+                    <p>2. Verifica en la pestana <strong>Config</strong> que los MO de cada ciudad sean correctos.</p>
+                    <p>3. Navega por las tablas de analisis para ver avances y proyecciones automaticas.</p>
                   </CardContent>
                 </Card>
               </div>
@@ -117,6 +125,14 @@ export default function ResultsDashboard() {
             <SpecificTable />
           </TabsContent>
 
+          <TabsContent value="combinados" className="outline-none">
+            <CombinedTable />
+          </TabsContent>
+
+          <TabsContent value="edge-general" className="outline-none">
+            <EdgeGeneralRequiredTable />
+          </TabsContent>
+
           <TabsContent value="asistencia" className="outline-none">
             <AttendanceTable />
           </TabsContent>
@@ -126,11 +142,10 @@ export default function ResultsDashboard() {
       <footer className="mt-20 border-t py-10 bg-zinc-50 dark:bg-zinc-950/20">
         <div className="container px-4 mx-auto text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} EDGE Analytics Platform — Diseñado para análisis operativo premium.
+            © {new Date().getFullYear()} EDGE Analytics Platform - Disenado para analisis operativo premium.
           </p>
         </div>
       </footer>
     </div>
   );
 }
-

@@ -3,9 +3,10 @@ import { normalizeText } from '@/lib/utils';
 import type { CityConfig } from '@/types/results.types';
 
 const REQUIRED_COLUMNS = {
-  area: ['AREA'],
-  cityName: ['CITY NAME', 'CITYNAME'],
+  metropolitanArea: ['METROPOLITAN AREA'],
+  cityName: ['CITY NAME'],
   mo: ['MO'],
+  simplifiedCity: ['CIUDADES SIMPLIFICADO'],
 } as const;
 
 const DEDUP_STRATEGY: 'keep-first' | 'keep-last' = 'keep-first';
@@ -38,7 +39,7 @@ function parseMo(raw: unknown): number | null {
 }
 
 function findColumnIndex(headers: string[], aliases: readonly string[]): number {
-  return headers.findIndex((header) => aliases.includes(normalizeText(header)));
+  return headers.findIndex(header => aliases.includes(normalizeText(header)));
 }
 
 export async function parseCityConfigExcel(file: File): Promise<ParsedCityConfigResult> {
@@ -51,15 +52,17 @@ export async function parseCityConfigExcel(file: File): Promise<ParsedCityConfig
     return { cityConfigs: [], totalRows: 0, skippedEmptyRows: 0, skippedInvalidRows: 0, duplicateRows: 0 };
   }
 
-  const headers = (rows[0] ?? []).map((value) => String(value ?? '').trim());
-  const areaIdx = findColumnIndex(headers, REQUIRED_COLUMNS.area);
+  const headers = (rows[0] ?? []).map(value => String(value ?? '').trim());
+  const metropolitanAreaIdx = findColumnIndex(headers, REQUIRED_COLUMNS.metropolitanArea);
   const cityIdx = findColumnIndex(headers, REQUIRED_COLUMNS.cityName);
   const moIdx = findColumnIndex(headers, REQUIRED_COLUMNS.mo);
+  const simplifiedCityIdx = findColumnIndex(headers, REQUIRED_COLUMNS.simplifiedCity);
 
   const missing: string[] = [];
-  if (areaIdx === -1) missing.push('Area');
-  if (cityIdx === -1) missing.push('City name');
+  if (metropolitanAreaIdx === -1) missing.push('Metropolitan Area');
+  if (cityIdx === -1) missing.push('City Name');
   if (moIdx === -1) missing.push('MO');
+  if (simplifiedCityIdx === -1) missing.push('CIUDADES SIMPLIFICADO');
   if (missing.length > 0) {
     throw new Error(`Faltan columnas requeridas en el Excel: ${missing.join(', ')}`);
   }
@@ -69,31 +72,35 @@ export async function parseCityConfigExcel(file: File): Promise<ParsedCityConfig
   let skippedInvalidRows = 0;
   let duplicateRows = 0;
 
-  for (let i = 1; i < rows.length; i++) {
+  for (let i = 1; i < rows.length; i += 1) {
     const row = rows[i] ?? [];
+    const metropolitanAreaRaw = String(row[metropolitanAreaIdx] ?? '').trim();
     const cityRaw = String(row[cityIdx] ?? '').trim();
-    const areaRaw = String(row[areaIdx] ?? '').trim();
+    const simplifiedCityRaw = String(row[simplifiedCityIdx] ?? '').trim();
     const mo = parseMo(row[moIdx]);
 
-    if (!cityRaw && !areaRaw && mo === null) {
+    if (!metropolitanAreaRaw && !cityRaw && !simplifiedCityRaw && mo === null) {
       skippedEmptyRows += 1;
       continue;
     }
 
-    if (!cityRaw || !areaRaw || mo === null) {
+    if (!metropolitanAreaRaw || !cityRaw || !simplifiedCityRaw || mo === null) {
       skippedInvalidRows += 1;
       continue;
     }
 
     const cityLabel = normalizeText(cityRaw);
+    const area = normalizeText(metropolitanAreaRaw);
+    const simplifiedCity = normalizeText(simplifiedCityRaw);
     const key = cityLabel;
     const item: CityConfig = {
       cityId: buildCityId(cityLabel),
       cityLabel,
-      aliases: [cityLabel],
+      aliases: Array.from(new Set([cityLabel, simplifiedCity])),
       mo,
       activo: true,
-      area: normalizeText(areaRaw),
+      area,
+      simplifiedCity,
       promGestor: 4,
       gestoresAyer: 0,
       errorRealPct: 0,

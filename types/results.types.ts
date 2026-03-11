@@ -1,4 +1,8 @@
-// ─── Raw Excel Row ────────────────────────────────────────────────────────────
+export type ExcelCellValue = string | number;
+
+export interface SourceRow {
+  [header: string]: ExcelCellValue;
+}
 
 export interface DailyRow {
   fecha: string | Date;
@@ -14,12 +18,11 @@ export interface DailyRow {
   enQCPOS: number;
   incompletePOS: number;
   refusalPOS: number;
-  microzonasVisitadas?: number;
-  numero?: number;            // column "N°" for attendance filter
-  taskDateTime?: string | Date; // timestamp for first/last task
+  totalTime?: number;
+  microzonasVisitadas?: string;
+  numero?: number;
+  taskDateTime?: string | Date;
 }
-
-// ─── Configuration Types ─────────────────────────────────────────────────────
 
 export interface CityConfig {
   cityId: string;
@@ -29,8 +32,8 @@ export interface CityConfig {
   muestra?: number;
   descansos?: number;
   activo: boolean;
-  // Extended fields for Specific table
   area: string;
+  simplifiedCity?: string;
   promGestor: number;
   gestoresAyer: number;
   errorRealPct: number;
@@ -41,14 +44,12 @@ export interface CityConfig {
 }
 
 export interface PeriodConfig {
-  startDate: string;        // ISO date string YYYY-MM-DD
+  startDate: string;
   endDate: string;
   todayCutoff: string;
   excludeSundays: boolean;
-  saturdayFactor: number;   // 0=no count, 0.5=half, 1=full
+  saturdayFactor: number;
 }
-
-// ─── Aggregated Data ─────────────────────────────────────────────────────────
 
 export interface AggregatedCityData {
   cityId: string;
@@ -59,8 +60,6 @@ export interface AggregatedCityData {
   fechasDetectadas: string[];
 }
 
-// ─── General Table A-L ───────────────────────────────────────────────────────
-
 export interface CityResult {
   ciudad: string;
   mo: number;
@@ -69,12 +68,11 @@ export interface CityResult {
   columnaE?: number | string | null;
   avanceTotal: number;
   avanceEsperadoHoy: number;
-  avanceGeneral: number;           // ratio (0-1+)
-  avanceEsperadoRelativo: number;  // ratio (0-1)
+  avanceGeneral: number;
+  avanceEsperadoRelativo: number;
   deficitHoy: number;
   deficitGeneral: number;
   muestra: number;
-  // Semaphore state
   estado: 'green' | 'yellow' | 'red';
 }
 
@@ -88,10 +86,9 @@ export interface GlobalTotals {
   avanceEsperadoRelativo: number;
 }
 
-// ─── Specific Table A-U ──────────────────────────────────────────────────────
-
 export interface SpecificTableRow {
   area: string;
+  simplifiedCity?: string;
   cityName: string;
   avanceQc: number;
   mo: number;
@@ -114,7 +111,15 @@ export interface SpecificTableRow {
   faltantesTotal: number;
 }
 
-// ─── Attendance Table ─────────────────────────────────────────────────────────
+export interface CombinedTableRow {
+  originalData: SourceRow;
+  rechazadosTotales: number;
+  porcentajeRechazados: number;
+  porcentajeAprobados: number;
+  porcentajeAjustes: number;
+  ciudadSimplificada: string;
+  tiempoPromedio: number;
+}
 
 export interface AttendanceRawRow {
   fecha: string;
@@ -148,20 +153,17 @@ export interface AttendanceSupervisorGroup {
   subtotalPos: number;
 }
 
-// ─── File Metadata ────────────────────────────────────────────────────────────
-
 export interface FileMetadata {
   filename: string;
   rowCount: number;
   detectedDates: string[];
   detectedCities: string[];
   unmappedCities: string[];
+  sourceHeaders: string[];
   maxDate?: string;
   hasTimeColumn: boolean;
   hasNumeroColumn: boolean;
 }
-
-// ─── Validation ───────────────────────────────────────────────────────────────
 
 export interface ValidationResult {
   valid: boolean;
